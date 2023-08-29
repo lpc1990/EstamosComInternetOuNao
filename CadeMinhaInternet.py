@@ -3,16 +3,20 @@
 # de nome pra indicar a origem  do arquivo, dizendo que esse arquivo .py foi convertido de um arquivo .ui)
 
 from PySide2.QtCore import QCoreApplication
-from PySide2.QtGui import QIcon
+from PySide2.QtGui import QIcon, QIntValidator
 from PySide2.QtCore import QThread
-from PySide2.QtWidgets import QApplication, QMainWindow, QSystemTrayIcon, QMenu, QAction
+from PySide2.QtWidgets import QApplication, QMainWindow, QSystemTrayIcon, QMenu, QAction, QDialog, QFileDialog, QMessageBox
 from ui_janela_principal import Ui_MainWindow
-import socket, time, pygame, subprocess, sys, os
+from ui_janela_log import Ui_janela_log
+from datetime import datetime
+import socket, time, pygame, subprocess, sys, os, tempfile
+
 
 # Pega o diretório atual da execução do arquivo atual e joga o path dele na variável diretorio_atual
 diretorio_atual = os.path.dirname(os.path.abspath(__file__))
 print("Diretório atual:", diretorio_atual)
 
+# ____________________________________ Sessão da classe da  threads ____________________________________
 # Classe que trabalha com Thread, que é a execução de funções sem travar o programa. Se quiser que uma função seja
 # executada sem travar o sistema, deve-se criar uma isntância dessa classe para rodar a função.
 class NossaThread(QThread):
@@ -23,34 +27,59 @@ class NossaThread(QThread):
     def __del__(self):
         self.wait()
 
-    def set_function(self, func, param=None):
+    def set_function(self, func, param=None, param2=None):
         self.func = func
         self.param = param
+        self.param2 = param2
 
     def run(self):
         if self.param == None:
             # print("Sem parâmetro!")
             if self.func:
                 self.func()
-        else:
+        elif self.param != None and self.param2 == None:
             if self.func:
                 # print("Com parâmetro!")
                 self.func(self.param)
+        else:
+            if self.param != None and self.param2 != None:
+                self.func(self.param, self.param2)
 
+
+# ____________________________________ Sessão da janela principal ____________________________________
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setupUi(self)
         self.setWindowTitle("Cadê minha internet?")
         self.setWindowIcon(QIcon(diretorio_atual + "\images\icon.png"))
-        self.setFixedSize(412, 698)
+        self.setFixedSize(534, 659)
         self.busca_informacoes_rede()
         self.definindo_sons()
         self.chamada_da_NossaThread()
+        self.chamada_da_NossaThread3()
 
-        # Aqui começa uma série de comandos para o programa ficar no Tray do windows
+
+        # Criação da lista para o log
+        self.lista_log_conexao = []
+        self.lista_log_ping = []
+
+
+        self.ln_quantidade_ping.setValidator(QIntValidator())
+        self.ln_quantidade_ping.textChanged.connect(self.teste_valor_quantidade_ping)
+
+        # Botão pingar
+        self.btn_pingar.clicked.connect(self.test_site_ip_valido_ping)
+
+        # Botão abrir pagina de logs
+        self.btn_abrir_janela_logs_conexao.clicked.connect(self.mostrar_janela_log_conexao)
+        self.btn_abrir_janela_logs_ping.clicked.connect(self.mostrar_janela_log_ping)
+
+
+        # ____________________________________ Sessão do tray do windows ____________________________________
         self.tray_icon = QSystemTrayIcon(self)
         self.tray_icon.setIcon(QIcon(diretorio_atual + "\images\icon.png"))
+        self.tray_icon.setToolTip("Cadê minha internet?")
 
         self.tray_menu = QMenu()
         self.show_action = QAction("Abrir", self)
@@ -89,19 +118,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.show()
     # Aqui termina a série de comandos do Tray
 
-    # Seta os sons para cada tipo de aviso do programa
-    def definindo_sons(self):
-        # inicia a entrada de sons no programa
-        pygame.mixer.init()
-        self.sons = pygame.mixer.Channel(7)
-        self.sons.set_volume(2.0)
 
-        self.som_internet_ok = pygame.mixer.Sound(diretorio_atual + "\sounds\internet_ok_1.mp3")
-        self.som_internet_sem_internet = pygame.mixer.Sound(diretorio_atual + "\sounds\sem_internet_1.mp3")
-        self.som_internet_caiu = pygame.mixer.Sound(diretorio_atual + "\sounds\caiu_internet_1.mp3")
-        self.som_internet_voltou = pygame.mixer.Sound(diretorio_atual + "\sounds\internet_voltou.mp3")
-        self.som_internet_caiu_dinovo = pygame.mixer.Sound(diretorio_atual + "\sounds\sem_internet_dinovo_1.mp3")
 
+    # ____________________________________ Sessão de threads ____________________________________
     # Função para a chamada do bloco que iniciará uma instância da classe NossaThread, responsável por executar uma
     # função em looping e ainda sim mostrar a tela incial do programa (mainWindow)
     def chamada_da_NossaThread(self):
@@ -111,6 +130,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.bloco.start()                                       #
         ##########################################################
 
+    # Função para a chamada do bloco que iniciará uma instância da classe NossaThread, responsável por executar uma
+    # função que capta o ping e o exibe na label)
+    def chamada_da_NossaThread2(self):
+        #############################################################################################
+        self.bloco2 = NossaThread()                                                                 #
+        self.bloco2.set_function(self.test_verbose_ping, self.hostname, self.quantidade_de_ping)    #
+        self.bloco2.start()                                                                         #
+        #############################################################################################
+
+    # Função para a chamada do bloco que iniciará uma instância da classe NossaThread, responsável por executar uma
+    # função que capta o ping pela primeira vez ao iniciar o programa
+    def chamada_da_NossaThread3(self):
+        #############################################################################################
+        self.hostname = "www.google.com.br"                                                         #
+        self.quantidade_de_ping = 4                                                                 #
+        self.bloco3 = NossaThread()                                                                 #
+        self.bloco3.set_function(self.test_verbose_ping, self.hostname, self.quantidade_de_ping)    #
+        self.bloco3.start()                                                                         #
+        #############################################################################################
+
+
+    # ____________________________________ Sessão de funções principais ____________________________________
     # Função que coleta informações sobre a rede do usuário e mostra na mainWindow
     def busca_informacoes_rede(self):
         # Executa o comando ipconfig /all no Windows
@@ -232,6 +273,134 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             previous_status = current_status
             time.sleep(5)
 
+    # Função que pega o site e a quantidade de pings passada atraves da função da thread executada, e gera os
+    # resultados dos pings
+    def test_verbose_ping(self, hostname, quantidade_de_ping):
+        self.bloquear_btnPing_lnPing()
+
+        temp_file = tempfile.NamedTemporaryFile(delete=False)
+
+        try:
+            subprocess.run(["ping", "-n", str(quantidade_de_ping), hostname], stdout=temp_file)
+        except Exception as e:
+            print(f"Failed to perform verbose ping: {e}")
+        finally:
+            temp_file.close()
+
+        with open(temp_file.name, 'r') as file:
+            captured_output = file.read()
+
+        os.unlink(temp_file.name)
+
+        # Convertendo bytes para str usando decode()
+        captured_output_str = str(captured_output)
+
+        # Separar as linhas relevantes
+        lines = captured_output_str.splitlines()
+
+        # Filtrar as linhas que contêm "Resposta"
+        response_lines = [line for line in lines if "Resposta" in line]
+
+        # Juntar as linhas filtradas novamente em uma string
+        formatted_output = '\n'.join(response_lines)
+        self.adiciona_ao_log_ping(formatted_output, str(self.ln_entrada_ping.text()))
+        self.lbl_resultado_ping.setText(formatted_output)
+
+        # Roda a função de liberar as linhas após a execução da função de ping
+        self.liberar_lnPing()
+
+        # Limpa o campo ln_quantidade_ping após a execução da função de ping
+        self.ln_quantidade_ping.setText("")
+
+        # Após qualquer inserção de texto ou números nos campos abaixo, irá chamar a função para testar se pode ou não
+        # liberar o botão de pingar. Só irá liberar se os dois campos estiverem preenchidos.
+        self.ln_entrada_ping.textChanged.connect(self.bloquear_botao_ping)
+        self.ln_quantidade_ping.textChanged.connect(self.bloquear_botao_ping)
+
+        # Retorno da funçao
+        return formatted_output
+
+    # Seta os sons para cada tipo de aviso do programa
+    def definindo_sons(self):
+        # inicia a entrada de sons no programa
+        pygame.mixer.init()
+        self.sons = pygame.mixer.Channel(7)
+        self.sons.set_volume(2.0)
+
+        self.som_internet_ok = pygame.mixer.Sound(diretorio_atual + "\sounds\internet_ok_1.mp3")
+        self.som_internet_sem_internet = pygame.mixer.Sound(diretorio_atual + "\sounds\sem_internet_1.mp3")
+        self.som_internet_caiu = pygame.mixer.Sound(diretorio_atual + "\sounds\caiu_internet_1.mp3")
+        self.som_internet_voltou = pygame.mixer.Sound(diretorio_atual + "\sounds\internet_voltou.mp3")
+        self.som_internet_caiu_dinovo = pygame.mixer.Sound(diretorio_atual + "\sounds\sem_internet_dinovo_1.mp3")
+
+    # Testa se a quantidade inserida no campo ln_quantidade_ping é entre 1 e 19. Se não for, ele automáticamente
+    # preenche com um dos valores, ou o mais alto ou o mais baixo
+    def teste_valor_quantidade_ping(self, text):
+        valor_minimo = 1
+        valor_maximo = 19
+
+        try:
+            valor = int(text)
+            if valor < valor_minimo:
+                self.ln_quantidade_ping.setText(str(valor_minimo))
+            elif valor > valor_maximo:
+                self.ln_quantidade_ping.setText(str(valor_maximo))
+        except ValueError:
+            pass
+
+    # Testa se a o site digitano no campo do ping é válido
+    def test_site_ip_valido_ping(self):
+        self.hostname = self.ln_entrada_ping.text()  #
+        self.quantidade_de_ping = self.ln_quantidade_ping.text()
+
+        try:
+            # Verifica se é um IP válido
+            socket.inet_aton(self.hostname)
+
+            # Realize o teste de ping aqui
+            self.chamada_da_NossaThread2()
+        except socket.error:
+            # Se não for um IP válido, tente resolver como um nome de domínio
+            try:
+                socket.gethostbyname(self.hostname)
+
+                # Realize o teste de ping aqui
+                self.chamada_da_NossaThread2()
+            except socket.gaierror:
+                # Se não for um nome de domínio válido, mostre uma mensagem de erro
+                self.lbl_resultado_ping.setText("Domínio ou IP inválido!")
+
+    # Função que chama a janela de log acionada pelo botão logs (btn_abrir_janela_logs)
+    def mostrar_janela_log_conexao(self):
+        self.log_windows = LogWindow(self.lista_log_conexao)
+        self.historico_log = "\n".join(self.lista_log_conexao)
+        self.log_windows.ptx_log.setPlainText(self.historico_log)
+        self.log_windows.exec_()
+
+    def mostrar_janela_log_ping(self):
+        self.log_windows = LogWindow(self.lista_log_ping)
+        self.historico_log = "\n".join(self.lista_log_ping)
+        self.log_windows.ptx_log.setPlainText(self.historico_log)
+        self.log_windows.exec_()
+
+
+    # Adiciona o evento ao log (Está sendo chamado cada vez que a internet cai, volta, etc, na função de trocar imagem
+    # e executar os sons.
+    def adiciona_ao_log_conexao(self, evento):
+        log = datetime.now().strftime('%d-%m-%Y %H:%M:%S')
+        self.lista_log_conexao.append(f"{log}: {evento}")
+
+    def adiciona_ao_log_ping(self, evento, site_pingado):
+        log = datetime.now().strftime('%d-%m-%Y %H:%M:%S')
+        if site_pingado == "":
+            site = "www.google.com.br - Padrão primeiro ping"
+        else:
+            site = str(site_pingado)
+            print(site)
+        self.lista_log_ping.append(f"{log} ({site}): \n{evento}")
+
+
+    # ____________________________________ Sessão de funções de alteração da img da internet ________________
     # Função chamada pela função check_internet_connection em caso da internet estiver ok!
     def altera_img_internet_ok(self):
         self.show_window() # Exibe a janela do programa se ele estiver no tray
@@ -239,6 +408,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         html_text1 = f"<html><head/><body><p align=\"center\"><span style=\" font-size:18pt; font-weight:600;\">Funcionando</span></p></body></html>"
         self.lb_status_da_conexao_resultado.setText(QCoreApplication.translate("MainWindow", html_text1, None))
         self.sons.play(self.som_internet_ok, loops=0)
+        self.adiciona_ao_log_conexao("Internet funcionando na primeira execução do programa")
 
     # Função chamada pela função check_internet_connection em caso da internet não estiver ok!
     def altera_img_internet_nao_ok(self):
@@ -247,6 +417,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         html_text1 = f"<html><head/><body><p align=\"center\"><span style=\" font-size:18pt; font-weight:600;\">Sem Internet</span></p></body></html>"
         self.lb_status_da_conexao_resultado.setText(QCoreApplication.translate("MainWindow", html_text1, None))
         self.sons.play(self.som_internet_sem_internet, loops=0)
+        self.adiciona_ao_log_conexao("Sem Internet na primeira execução do programa")
 
     # Função chamada pela função check_internet_connection em caso da internet cair!
     def altera_img_internet_caiu(self):
@@ -255,6 +426,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         html_text1 = f"<html><head/><body><p align=\"center\"><span style=\" font-size:18pt; font-weight:600;\">A Internet caiu!</span></p></body></html>"
         self.lb_status_da_conexao_resultado.setText(QCoreApplication.translate("MainWindow", html_text1, None))
         self.sons.play(self.som_internet_caiu, loops=0)
+        self.adiciona_ao_log_conexao("Internet caiu")
 
     # Função chamada pela função check_internet_connection em caso da internet voltar!
     def altera_img_internet_voltou(self):
@@ -263,6 +435,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         html_text1 = f"<html><head/><body><p align=\"center\"><span style=\" font-size:18pt; font-weight:600;\">A Internet voltou!</span></p></body></html>"
         self.lb_status_da_conexao_resultado.setText(QCoreApplication.translate("MainWindow", html_text1, None))
         self.sons.play(self.som_internet_voltou, loops=0)
+        self.adiciona_ao_log_conexao("Internet voltou")
 
     # Função chamada pela função check_internet_connection em caso da internet cair a partir da segunda vez!
     def altera_img_internet_caiu_dinovo(self):
@@ -271,6 +444,72 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         html_text1 = f"<html><head/><body><p align=\"center\"><span style=\" font-size:18pt; font-weight:600;\">A Internet caiu dinovo!</span></p></body></html>"
         self.lb_status_da_conexao_resultado.setText(QCoreApplication.translate("MainWindow", html_text1, None))
         self.sons.play(self.som_internet_caiu_dinovo, loops=0)
+        self.adiciona_ao_log_conexao("Internet caiu dinovo")
+
+
+    # ____________________________________ Sessão de bloqueio de botões e linhas  _____________________________
+    # Função para bloquear as entradas de linha e botão referenets ao ping. Essa função também é responsável por criar
+    # e mensagem de processando ping na lb de exibição de ping
+    def bloquear_btnPing_lnPing(self):
+        texto_processando_ping = "Processando ping para " + self.hostname
+        self.lbl_resultado_ping.setText(texto_processando_ping)
+        self.btn_pingar.setDisabled(True)
+        self.ln_entrada_ping.setDisabled(True)
+        self.ln_quantidade_ping.setDisabled(True)
+
+    # Função para liberar as entradas de linha referentes ao ping (site e quantidade de pings)
+    def liberar_lnPing(self):
+        self.ln_entrada_ping.setEnabled(True)
+        self.ln_quantidade_ping.setEnabled(True)
+
+    # Função que libera somente o botão de pingar
+    def bloquear_botao_ping(self):
+        habilitado = bool(self.ln_entrada_ping.text() and self.ln_quantidade_ping.text())
+        self.btn_pingar.setEnabled(habilitado)
+
+
+
+# Classe da janela de log
+class LogWindow(QDialog, Ui_janela_log):
+    def __init__(self, lista_log):
+        super(LogWindow, self).__init__()
+        self.setupUi(self)
+        self.lista_log = lista_log
+
+        self.setWindowTitle("Cadê minha internet? - Logs")
+        self.setWindowIcon(QIcon(diretorio_atual + "\images\icon.png"))
+        self.setFixedSize(535, 505)
+
+        self.btn_exportar_log.clicked.connect(self.exportar_log)
+
+    # Função que gera o txt do log.
+    def exportar_log(self):
+        self.historico_log = "\n".join(self.lista_log)
+
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        file_name, _ = QFileDialog.getSaveFileName(self, "Exportar Log", "",
+                                                   "Arquivos de Texto (*.txt);;Todos os Arquivos (*)",
+                                                   options=options)
+
+        if file_name:
+            try:
+                file_name += ".txt"
+                with open(file_name, 'w') as file:
+                    file.write(self.historico_log)
+                self.mostrar_mensagem("Log exportado com sucesso para:\n" + file_name)
+            except Exception as e:
+                self.mostrar_mensagem("Erro ao exportar o log:\n" + str(e))
+
+    # Função para mostrar uma mensagem para o usuário na tela
+    def mostrar_mensagem(self, mensagem):
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Information)
+        msg_box.setText(mensagem)
+        msg_box.setWindowTitle("Mensagem")
+        msg_box.exec_()
+
+
 
 
 

@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>412</width>
-    <height>698</height>
+    <width>534</width>
+    <height>659</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -29,10 +29,10 @@
    <widget class="QFrame" name="frm_informacoes">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>30</y>
-      <width>331</width>
-      <height>221</height>
+      <x>270</x>
+      <y>20</y>
+      <width>251</width>
+      <height>211</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -235,10 +235,10 @@
    <widget class="QFrame" name="frm_status_internet">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>270</y>
-      <width>331</width>
-      <height>251</height>
+      <x>10</x>
+      <y>20</y>
+      <width>251</width>
+      <height>211</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -310,10 +310,10 @@
    <widget class="QFrame" name="frm_rodape">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>530</y>
-      <width>331</width>
-      <height>111</height>
+      <x>10</x>
+      <y>320</y>
+      <width>351</width>
+      <height>271</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -327,12 +327,28 @@
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
+    <widget class="QLabel" name="lbl_resultado_ping">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>331</width>
+       <height>251</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+     </property>
+    </widget>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>655</y>
+      <x>100</x>
+      <y>600</y>
       <width>331</width>
       <height>41</height>
      </rect>
@@ -341,7 +357,7 @@
      <item>
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;Onde está minha internet?&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;Cadê minha internet?&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
      </item>
@@ -353,6 +369,89 @@
       </widget>
      </item>
     </layout>
+   </widget>
+   <widget class="QPushButton" name="btn_pingar">
+    <property name="geometry">
+     <rect>
+      <x>320</x>
+      <y>290</y>
+      <width>41</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Pingar</string>
+    </property>
+   </widget>
+   <widget class="QWidget" name="layoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>270</y>
+      <width>157</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_4">
+     <item>
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Digite o site para realizar o ping:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="ln_entrada_ping"/>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="layoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>270</y>
+      <width>133</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_5">
+     <item>
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>N° de pings (min:1 max:19)</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="ln_quantidade_ping"/>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QPushButton" name="btn_abrir_janela_logs_conexao">
+    <property name="geometry">
+     <rect>
+      <x>410</x>
+      <y>350</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Logs conexão</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btn_abrir_janela_logs_ping">
+    <property name="geometry">
+     <rect>
+      <x>410</x>
+      <y>380</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Logs ping</string>
+    </property>
    </widget>
   </widget>
  </widget>

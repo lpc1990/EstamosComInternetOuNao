@@ -1,11 +1,12 @@
-import os
-import subprocess
+from ping3 import ping, verbose_ping
 
-# Obtém o diretório do script Python em execução
-diretorio_atual = os.path.dirname(os.path.abspath(__file__))
+# Ping simples
+hostname = "www.google.com"
+response_time = ping(hostname)
+if response_time is not None:
+    print(f"Ping response time for {hostname}: {response_time:.2f} ms")
+else:
+    print(f"Failed to ping {hostname}")
 
-# Constrói o caminho completo para o executável
-executavel = os.path.join(diretorio_atual, "CadeMinhaInternet.exe")
-
-# Execute o executável
-subprocess.run([executavel])
+# Ping com mais detalhes
+verbose_ping(hostname, count=4)
