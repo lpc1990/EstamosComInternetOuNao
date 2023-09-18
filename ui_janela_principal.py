@@ -18,7 +18,7 @@ class Ui_MainWindow(object):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.setEnabled(True)
-        MainWindow.resize(534, 659)
+        MainWindow.resize(782, 637)
         sizePolicy = QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -29,7 +29,7 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName(u"centralwidget")
         self.frm_informacoes = QFrame(self.centralwidget)
         self.frm_informacoes.setObjectName(u"frm_informacoes")
-        self.frm_informacoes.setGeometry(QRect(270, 20, 251, 211))
+        self.frm_informacoes.setGeometry(QRect(190, 20, 291, 201))
         self.frm_informacoes.setStyleSheet(u"QFrame#frm_informacoes{\n"
 "	border: 1px solid black;\n"
 "	\n"
@@ -153,7 +153,7 @@ class Ui_MainWindow(object):
 
         self.frm_status_internet = QFrame(self.centralwidget)
         self.frm_status_internet.setObjectName(u"frm_status_internet")
-        self.frm_status_internet.setGeometry(QRect(10, 20, 251, 211))
+        self.frm_status_internet.setGeometry(QRect(10, 20, 171, 201))
         self.frm_status_internet.setStyleSheet(u"QFrame#frm_status_internet{\n"
 "	border: 1px solid black;\n"
 "\n"
@@ -195,21 +195,9 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_2.addWidget(self.lb_status_da_conexao_resultado)
 
-        self.frm_rodape = QFrame(self.centralwidget)
-        self.frm_rodape.setObjectName(u"frm_rodape")
-        self.frm_rodape.setGeometry(QRect(10, 320, 351, 271))
-        self.frm_rodape.setStyleSheet(u"QFrame#frm_rodape{\n"
-"	border: 1px solid black;\n"
-"}")
-        self.frm_rodape.setFrameShape(QFrame.StyledPanel)
-        self.frm_rodape.setFrameShadow(QFrame.Raised)
-        self.lbl_resultado_ping = QLabel(self.frm_rodape)
-        self.lbl_resultado_ping.setObjectName(u"lbl_resultado_ping")
-        self.lbl_resultado_ping.setGeometry(QRect(10, 10, 331, 251))
-        self.lbl_resultado_ping.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
         self.layoutWidget = QWidget(self.centralwidget)
         self.layoutWidget.setObjectName(u"layoutWidget")
-        self.layoutWidget.setGeometry(QRect(100, 600, 331, 41))
+        self.layoutWidget.setGeometry(QRect(170, 590, 331, 41))
         self.verticalLayout_3 = QVBoxLayout(self.layoutWidget)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
@@ -225,10 +213,10 @@ class Ui_MainWindow(object):
 
         self.btn_pingar = QPushButton(self.centralwidget)
         self.btn_pingar.setObjectName(u"btn_pingar")
-        self.btn_pingar.setGeometry(QRect(320, 290, 41, 23))
+        self.btn_pingar.setGeometry(QRect(320, 250, 41, 23))
         self.layoutWidget1 = QWidget(self.centralwidget)
         self.layoutWidget1.setObjectName(u"layoutWidget1")
-        self.layoutWidget1.setGeometry(QRect(10, 270, 157, 41))
+        self.layoutWidget1.setGeometry(QRect(10, 230, 157, 41))
         self.verticalLayout_4 = QVBoxLayout(self.layoutWidget1)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
         self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
@@ -244,7 +232,7 @@ class Ui_MainWindow(object):
 
         self.layoutWidget2 = QWidget(self.centralwidget)
         self.layoutWidget2.setObjectName(u"layoutWidget2")
-        self.layoutWidget2.setGeometry(QRect(180, 270, 133, 41))
+        self.layoutWidget2.setGeometry(QRect(180, 230, 133, 41))
         self.verticalLayout_5 = QVBoxLayout(self.layoutWidget2)
         self.verticalLayout_5.setObjectName(u"verticalLayout_5")
         self.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
@@ -260,10 +248,32 @@ class Ui_MainWindow(object):
 
         self.btn_abrir_janela_logs_conexao = QPushButton(self.centralwidget)
         self.btn_abrir_janela_logs_conexao.setObjectName(u"btn_abrir_janela_logs_conexao")
-        self.btn_abrir_janela_logs_conexao.setGeometry(QRect(410, 350, 75, 23))
+        self.btn_abrir_janela_logs_conexao.setGeometry(QRect(110, 550, 75, 23))
         self.btn_abrir_janela_logs_ping = QPushButton(self.centralwidget)
         self.btn_abrir_janela_logs_ping.setObjectName(u"btn_abrir_janela_logs_ping")
-        self.btn_abrir_janela_logs_ping.setGeometry(QRect(410, 380, 75, 23))
+        self.btn_abrir_janela_logs_ping.setGeometry(QRect(190, 550, 75, 23))
+        self.lbl_log_ping = QLabel(self.centralwidget)
+        self.lbl_log_ping.setObjectName(u"lbl_log_ping")
+        self.lbl_log_ping.setGeometry(QRect(10, 280, 351, 261))
+        self.lbl_log_ping.setStyleSheet(u"QLabel#lbl_log_ping{\n"
+"	border: 1px solid black;\n"
+"\n"
+"}")
+        self.lbl_log_ping.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
+        self.btn_dns_google = QPushButton(self.centralwidget)
+        self.btn_dns_google.setObjectName(u"btn_dns_google")
+        self.btn_dns_google.setGeometry(QRect(570, 20, 75, 23))
+        self.btn_dns_auto = QPushButton(self.centralwidget)
+        self.btn_dns_auto.setObjectName(u"btn_dns_auto")
+        self.btn_dns_auto.setGeometry(QRect(490, 20, 75, 23))
+        self.lbl_log_rede = QLabel(self.centralwidget)
+        self.lbl_log_rede.setObjectName(u"lbl_log_rede")
+        self.lbl_log_rede.setGeometry(QRect(490, 90, 281, 131))
+        self.lbl_log_rede.setStyleSheet(u"QLabel#lbl_log_rede{\n"
+"	border: 1px solid black;\n"
+"\n"
+"}")
+        self.lbl_log_rede.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
@@ -285,12 +295,11 @@ class Ui_MainWindow(object):
         self.lb_dns2_resultado.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p align=\"center\"><span style=\" font-size:10pt; font-weight:600;\">-</span></p></body></html>", None))
         self.lb_ipv6.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p align=\"center\"><span style=\" font-size:10pt; font-weight:600;\">IPV6</span></p></body></html>", None))
         self.lb_ipv6_resultado.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p align=\"center\"><span style=\" font-size:10pt; font-weight:600;\">-</span></p></body></html>", None))
-        self.lb_status_da_conexao.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p align=\"center\"><span style=\" font-size:18pt; font-weight:600;\">Status da conex\u00e3o</span></p></body></html>", None))
+        self.lb_status_da_conexao.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p align=\"center\"><span style=\" font-size:10pt; font-weight:600;\">Status da conex\u00e3o</span></p></body></html>", None))
         self.lb_nulo.setText("")
         self.lb_img_status_conexao.setText("")
         self.lb_nulo_2.setText("")
-        self.lb_status_da_conexao_resultado.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p align=\"center\"><span style=\" font-size:18pt; font-weight:600;\">Verificando</span></p></body></html>", None))
-        self.lbl_resultado_ping.setText("")
+        self.lb_status_da_conexao_resultado.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p align=\"center\"><span style=\" font-size:10pt; font-weight:600;\">Verificando</span></p></body></html>", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p align=\"center\"><span style=\" font-size:12pt; font-weight:600;\">Cad\u00ea minha internet?</span></p></body></html>", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p align=\"center\"><span style=\" font-weight:600;\">by II Luiiz II</span></p></body></html>", None))
         self.btn_pingar.setText(QCoreApplication.translate("MainWindow", u"Pingar", None))
@@ -298,5 +307,9 @@ class Ui_MainWindow(object):
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"N\u00b0 de pings (min:1 max:19)", None))
         self.btn_abrir_janela_logs_conexao.setText(QCoreApplication.translate("MainWindow", u"Logs conex\u00e3o", None))
         self.btn_abrir_janela_logs_ping.setText(QCoreApplication.translate("MainWindow", u"Logs ping", None))
+        self.lbl_log_ping.setText("")
+        self.btn_dns_google.setText(QCoreApplication.translate("MainWindow", u"DNS Google", None))
+        self.btn_dns_auto.setText(QCoreApplication.translate("MainWindow", u"DNS Auto", None))
+        self.lbl_log_rede.setText("")
     # retranslateUi
 

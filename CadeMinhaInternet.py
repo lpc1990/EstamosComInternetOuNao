@@ -9,12 +9,40 @@ from PySide2.QtWidgets import QApplication, QMainWindow, QSystemTrayIcon, QMenu,
 from ui_janela_principal import Ui_MainWindow
 from ui_janela_log import Ui_janela_log
 from datetime import datetime
-import socket, time, pygame, subprocess, sys, os, tempfile
+import socket, time, pygame, subprocess, sys, os, tempfile, atexit
+from version_uptate import verifica_atualizacao
+import rede
 
 
 # Pega o diretório atual da execução do arquivo atual e joga o path dele na variável diretorio_atual
 diretorio_atual = os.path.dirname(os.path.abspath(__file__))
-print("Diretório atual:", diretorio_atual)
+
+# Cria um arquivo na inicialização do programa, para que, se tentar abrir novamente outra instância da mesma aplicação
+# a pessoa não consiga. No fim do programa, quando o programa é fechado, o arquivo é excluido
+lock_file = diretorio_atual + "/my_app.lock"
+
+# Verificando a existência do arquivo acima
+try:
+    lock_fd = os.open(lock_file, os.O_CREAT | os.O_EXCL | os.O_RDWR)
+# Tratando o erro e dando exit do sistema se o arquivo existir
+except Exception as e:
+    print(f"Erro ao abrir o arquivo de bloqueio: {str(e)}")
+    sys.exit(1)
+
+# Função chamada pelo método atexit.register, e é executado na saída do programa, quando é fechado. Ele exclui o arquivo
+# criado acima (my_app.lock).
+def encerrar_programa():
+    os.close(lock_fd)
+    os.unlink(lock_file)
+
+# O método abaixo teve que ser importado, e permite que no fim do programa seja executado o que estiver entre parenteses
+atexit.register(encerrar_programa)
+
+# Variáveis que rodam a função obter_endereco_ip_por_nome_interface do arquivo rede.py, que retorna dois valores, o
+# primeiro é o endereço de ip da interface ativa e o segundo é o nome da interface ativa, armazenando em variáveis.
+endereco_interface_ativa, nome_interface_ativa = rede.obter_endereco_ip_por_nome_interface()
+print(endereco_interface_ativa, nome_interface_ativa)
+
 
 # ____________________________________ Sessão da classe da  threads ____________________________________
 # Classe que trabalha com Thread, que é a execução de funções sem travar o programa. Se quiser que uma função seja
@@ -53,7 +81,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.setWindowTitle("Cadê minha internet?")
         self.setWindowIcon(QIcon(diretorio_atual + "\images\icon.png"))
-        self.setFixedSize(534, 659)
+        self.setFixedSize(782, 637)
         self.busca_informacoes_rede()
         self.definindo_sons()
         self.chamada_da_NossaThread()
@@ -74,6 +102,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Botão abrir pagina de logs
         self.btn_abrir_janela_logs_conexao.clicked.connect(self.mostrar_janela_log_conexao)
         self.btn_abrir_janela_logs_ping.clicked.connect(self.mostrar_janela_log_ping)
+
+        # Botão DNS do google
+        self.btn_dns_google.clicked.connect(self.alterar_dns_google)
+        self.btn_dns_auto.clicked.connect(self.alterar_dns_dhcp)
 
 
         # ____________________________________ Sessão do tray do windows ____________________________________
@@ -175,6 +207,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 dns1 = parts1[1].strip()
                 dns2 = parts2[0].strip()
 
+                if dns1 == "8.8.8.8" and dns2 == "8.8.4.4":
+                    self.btn_dns_google.setDisabled(True)
+
             # Seta os labels da mainWindows com as informações referentes ao DNS1 e DNS2, respectivamente
             html_text1 = f"<html><head/><body><p align=\"center\"><span style=\" font-size:10pt; font-weight:400;\">{dns1}</span></p></body></html>"
             self.lb_dns1_resultado.setText(QCoreApplication.translate("MainWindow", html_text1, None))
@@ -238,6 +273,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 html_text = f"<html><head/><body><p align=\"center\"><span style=\" font-size:10pt; font-weight:400;\">{gateway}</span></p></body></html>"
                 self.lb_gateway_resultado.setText(QCoreApplication.translate("MainWindow", html_text, None))
 
+            return dns1, dns2
+
     # Função que checa se a internet está funcionando em looping e em cado de alguma mudança, ele avisa por áudio.
     def check_internet_connection(self):
         previous_status = None
@@ -253,22 +290,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if previous_status is None:
                 if current_status == "Online":
                     self.altera_img_internet_ok()
-                    print("Status da Internet:", current_status)
+                    # print("Status da Internet:", current_status)
                 else:
                     self.altera_img_internet_nao_ok()
-                    print("Status da Internet:", current_status)
+                    # print("Status da Internet:", current_status)
             elif previous_status != current_status:
                 if current_status == "Online":
                     self.altera_img_internet_voltou()
-                    print("A Internet voltou!")
+                    # print("A Internet voltou!")
                 else:
                     if num_failures < 1:
                         num_failures += 1
                         self.altera_img_internet_caiu()
-                        print("A Internet caiu.")
+                        # print("A Internet caiu.")
                     elif num_failures >= 1:
                         self.altera_img_internet_caiu_dinovo()
-                        print("A Internet caiu OUTRA VEZ.")
+                        # print("A Internet caiu OUTRA VEZ.")
 
             previous_status = current_status
             time.sleep(5)
@@ -304,7 +341,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Juntar as linhas filtradas novamente em uma string
         formatted_output = '\n'.join(response_lines)
         self.adiciona_ao_log_ping(formatted_output, str(self.ln_entrada_ping.text()))
-        self.lbl_resultado_ping.setText(formatted_output)
+        self.lbl_log_ping.setText(formatted_output)
 
         # Roda a função de liberar as linhas após a execução da função de ping
         self.liberar_lnPing()
@@ -368,7 +405,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.chamada_da_NossaThread2()
             except socket.gaierror:
                 # Se não for um nome de domínio válido, mostre uma mensagem de erro
-                self.lbl_resultado_ping.setText("Domínio ou IP inválido!")
+                self.lbl_log_ping.setText("Domínio ou IP inválido!")
 
     # Função que chama a janela de log acionada pelo botão logs (btn_abrir_janela_logs)
     def mostrar_janela_log_conexao(self):
@@ -383,6 +420,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.log_windows.ptx_log.setPlainText(self.historico_log)
         self.log_windows.exec_()
 
+    # Função chamada pelo botão de alterar dns para o google, na qual chama a função change_dns_to_google do arquivo
+    # rede.py passando o argumento do endereço de IP da rede principal
+    def alterar_dns_google(self):
+        status_troca_dns = rede.change_dns_to_google(endereco_interface_ativa)
+        self.busca_informacoes_rede()
+        if status_troca_dns == "ok":
+            self.lbl_log_rede.setText(
+                f"DNS da interface com IP {endereco_interface_ativa} foi atualizado \npara DNS1: 8.8.8.8  &  "
+                f" DNS2: 8.8.4.4")
+        else:
+            self.lbl_log_rede.setText(
+                f"DNS da interface com IP {endereco_interface_ativa} não teve êxito \nna alteração")
+
+    # Função chamada pelo botão de alterar dns para o google, na qual chama a função change_dns_to_dhcp do arquivo
+    # rede.py passando o argumento do endereço de IP da rede principal
+    def alterar_dns_dhcp(self):
+        self.btn_dns_google.setEnabled(True)
+        status_troca_dns = rede.change_dns_to_dhcp(endereco_interface_ativa)
+        self.busca_informacoes_rede()
+        if status_troca_dns == "ok":
+            self.lbl_log_rede.setText(
+                f"DNS da interface com IP {endereco_interface_ativa} foi atualizado \npara automático")
+        else:
+            self.lbl_log_rede.setText(
+                f"DNS da interface com IP {endereco_interface_ativa} não teve êxito \nna alteração")
+
 
     # Adiciona o evento ao log (Está sendo chamado cada vez que a internet cai, volta, etc, na função de trocar imagem
     # e executar os sons.
@@ -396,16 +459,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             site = "www.google.com.br - Padrão primeiro ping"
         else:
             site = str(site_pingado)
-            print(site)
         self.lista_log_ping.append(f"{log} ({site}): \n{evento}")
-
 
     # ____________________________________ Sessão de funções de alteração da img da internet ________________
     # Função chamada pela função check_internet_connection em caso da internet estiver ok!
     def altera_img_internet_ok(self):
         self.show_window() # Exibe a janela do programa se ele estiver no tray
         self.lb_img_status_conexao.setPixmap(diretorio_atual + '\images\sinal_verde_grande.png')
-        html_text1 = f"<html><head/><body><p align=\"center\"><span style=\" font-size:18pt; font-weight:600;\">Funcionando</span></p></body></html>"
+        html_text1 = (f"<html><head/><body><p align=\"center\"><span style=\" font-size:8pt; "
+                      f"font-weight:600;\">Funcionando</span></p></body></html>")
         self.lb_status_da_conexao_resultado.setText(QCoreApplication.translate("MainWindow", html_text1, None))
         self.sons.play(self.som_internet_ok, loops=0)
         self.adiciona_ao_log_conexao("Internet funcionando na primeira execução do programa")
@@ -414,7 +476,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def altera_img_internet_nao_ok(self):
         self.show_window() # Exibe a janela do programa se ele estiver no tray
         self.lb_img_status_conexao.setPixmap(diretorio_atual + '\images\sinal_vermelho_grande.png')
-        html_text1 = f"<html><head/><body><p align=\"center\"><span style=\" font-size:18pt; font-weight:600;\">Sem Internet</span></p></body></html>"
+        html_text1 = (f"<html><head/><body><p align=\"center\"><span style=\" font-size:8pt; font-weight:600;\">Sem "
+                      f"Internet</span></p></body></html>")
         self.lb_status_da_conexao_resultado.setText(QCoreApplication.translate("MainWindow", html_text1, None))
         self.sons.play(self.som_internet_sem_internet, loops=0)
         self.adiciona_ao_log_conexao("Sem Internet na primeira execução do programa")
@@ -423,7 +486,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def altera_img_internet_caiu(self):
         self.show_window() # Exibe a janela do programa se ele estiver no tray
         self.lb_img_status_conexao.setPixmap(diretorio_atual + '\images\sinal_vermelho_grande.png')
-        html_text1 = f"<html><head/><body><p align=\"center\"><span style=\" font-size:18pt; font-weight:600;\">A Internet caiu!</span></p></body></html>"
+        html_text1 = (f"<html><head/><body><p align=\"center\"><span style=\" font-size:8pt; font-weight:600;\">A "
+                      f"Internet caiu!</span></p></body></html>")
         self.lb_status_da_conexao_resultado.setText(QCoreApplication.translate("MainWindow", html_text1, None))
         self.sons.play(self.som_internet_caiu, loops=0)
         self.adiciona_ao_log_conexao("Internet caiu")
@@ -432,7 +496,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def altera_img_internet_voltou(self):
         self.show_window() # Exibe a janela do programa se ele estiver no tray
         self.lb_img_status_conexao.setPixmap(diretorio_atual + '\images\sinal_verde_grande.png')
-        html_text1 = f"<html><head/><body><p align=\"center\"><span style=\" font-size:18pt; font-weight:600;\">A Internet voltou!</span></p></body></html>"
+        html_text1 = (f"<html><head/><body><p align=\"center\"><span style=\" font-size:8pt; font-weight:600;\">A "
+                      f"Internet voltou!</span></p></body></html>")
         self.lb_status_da_conexao_resultado.setText(QCoreApplication.translate("MainWindow", html_text1, None))
         self.sons.play(self.som_internet_voltou, loops=0)
         self.adiciona_ao_log_conexao("Internet voltou")
@@ -441,7 +506,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def altera_img_internet_caiu_dinovo(self):
         self.show_window() # Exibe a janela do programa se ele estiver no tray
         self.lb_img_status_conexao.setPixmap(diretorio_atual + '\images\sinal_vermelho_grande.png')
-        html_text1 = f"<html><head/><body><p align=\"center\"><span style=\" font-size:18pt; font-weight:600;\">A Internet caiu dinovo!</span></p></body></html>"
+        html_text1 = (f"<html><head/><body><p align=\"center\"><span style=\" font-size:8pt; font-weight:600;\">A "
+                      f"Internet caiu dinovo!</span></p></body></html>")
         self.lb_status_da_conexao_resultado.setText(QCoreApplication.translate("MainWindow", html_text1, None))
         self.sons.play(self.som_internet_caiu_dinovo, loops=0)
         self.adiciona_ao_log_conexao("Internet caiu dinovo")
@@ -452,7 +518,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     # e mensagem de processando ping na lb de exibição de ping
     def bloquear_btnPing_lnPing(self):
         texto_processando_ping = "Processando ping para " + self.hostname
-        self.lbl_resultado_ping.setText(texto_processando_ping)
+        self.lbl_log_ping.setText(texto_processando_ping)
         self.btn_pingar.setDisabled(True)
         self.ln_entrada_ping.setDisabled(True)
         self.ln_quantidade_ping.setDisabled(True)
@@ -501,6 +567,7 @@ class LogWindow(QDialog, Ui_janela_log):
             except Exception as e:
                 self.mostrar_mensagem("Erro ao exportar o log:\n" + str(e))
 
+
     # Função para mostrar uma mensagem para o usuário na tela
     def mostrar_mensagem(self, mensagem):
         msg_box = QMessageBox()
@@ -510,11 +577,10 @@ class LogWindow(QDialog, Ui_janela_log):
         msg_box.exec_()
 
 
-
-
-
 # Precisa de apenas uma instância por aplicação
 app = QApplication(sys.argv)
+# Chama a função de verificar atualização do progrma
+verifica_atualizacao(app)
 # Criação do qtwidget que será a janela
 window = MainWindow()
 # Começa o evento loop

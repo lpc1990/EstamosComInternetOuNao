@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Cade minha Internet"
-#define MyAppVersion "1.5"
+#define MyAppVersion "v2.0.0"
 #define MyAppPublisher "II Luiiz II"
 #define MyAppURL "luiz"
 #define MyAppExeName "CadeMinhaInternet.exe"
@@ -23,7 +23,7 @@ DefaultDirName={autopf}\{#MyAppName}
 DisableProgramGroupPage=yes
 ; Uncomment the following line to run in non administrative install mode (install for current user only.)
 ;PrivilegesRequired=lowest
-OutputBaseFilename=mysetup
+OutputBaseFilename=CadeMinhaInternet {#MyAppVersion} 
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
